@@ -1,10 +1,10 @@
 package example;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-import java.util.Scanner;
+import java.lang.reflect.*;
+import java.util.*;
 
 public class TextEditor extends Frame implements ActionListener
 {
@@ -12,6 +12,9 @@ public class TextEditor extends Frame implements ActionListener
     String fontFamily;
     String currentFont;
     int fontSize;
+
+    Field[] fields;
+
     MenuBar menuBar;
     TextArea textArea;
     Menu fileMenu;
@@ -19,6 +22,9 @@ public class TextEditor extends Frame implements ActionListener
     Menu fontSizeMenu;
 
     Menu fontFamilyMenu;
+    Menu fontStyleMenu;
+
+    Menu fontColorMenu;
 
     MenuItem fileNew;
     MenuItem fileOpen;
@@ -33,24 +39,29 @@ public class TextEditor extends Frame implements ActionListener
 
     MenuItem fontMenuItem;
 
+    MenuItem fontStylePlain;
+    MenuItem fontStyleBold;
+    MenuItem fontStyleItalic;
+
+    MenuItem colorMenuItem;
+
     public TextEditor()
     {
         fontSize = 20;
-        currentFont = "Arial";
+        //currentFont = "Algerian";
         menuBar = new MenuBar();
         textArea = new TextArea();
         setMenuBar(menuBar);
         add(textArea);
-        textArea.setFont(new Font(currentFont, Font.PLAIN, fontSize));
+        //textArea.setFont(new Font(currentFont, Font.PLAIN, fontSize));
         setTitle("untitled.txt - Editeur de texte");
         setSize(500, 500);
         setVisible(true);
 
         fileMenu = new Menu("File", true);
         editMenu = new Menu("Edit");
-        fontSizeMenu = new Menu("Font Size");
-        fontFamilyMenu = new Menu("Font Family");
-
+        fontSizeMenu = new Menu("Font size");
+        fontFamilyMenu = new Menu("Family");
 
         fileNew = new MenuItem("New");
         fileOpen = new MenuItem("Open");
@@ -75,26 +86,60 @@ public class TextEditor extends Frame implements ActionListener
         fontSizeMenu.add(fontAddSizeMenu);
         fontSizeMenu.add(fontRemSizeMenu);
 
+
         for (String fontFamily : fonts)
         {
             fontMenuItem = new MenuItem(fontFamily);
+            fontMenuItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    textArea.setFont(new Font(fontFamily, Font.PLAIN, fontSize));
+                }
+            });
             fontFamilyMenu.add(fontMenuItem);
         }
+
+        fontStyleMenu = new Menu("Style");
+        fontStylePlain = new MenuItem("Plain");
+        fontStyleBold = new MenuItem("Bold");
+        fontStyleItalic = new MenuItem("Italic");
+
+        fontStyleMenu.add(fontStylePlain);
+        fontStyleMenu.add(fontStyleBold);
+        fontStyleMenu.add(fontStyleItalic);
+
+        fontColorMenu = new Menu("Color");
 
         menuBar.add(fileMenu);
         menuBar.add(editMenu);
         menuBar.add(fontSizeMenu);
         menuBar.add(fontFamilyMenu);
+        menuBar.add(fontStyleMenu);
+        menuBar.add(fontColorMenu);
 
-        // textArea.setForeground(Color.red);
+        fields = Color.class.getFields();
 
-        /*
-        for (int i = 0; i <= fonts.length - 50 ;i++){
-            fontPane.add(fonts[i]);
+        for (Field field : fields) {
+            if (java.lang.reflect.Modifier.isStatic(field.getModifiers()) && java.lang.reflect.Modifier.isFinal(field.getModifiers()) && field.getType() == Color.class)
+            {
+                try
+                {
+                    final Color color = (Color) field.get(null);
+                    colorMenuItem = new MenuItem(field.getName());
+                    fontColorMenu.add(colorMenuItem);
+                    colorMenuItem.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        textArea.setForeground(color);
+                    }
+                });
+                }
+                catch (IllegalAccessException e)
+                {
+                    e.printStackTrace();
+                }
+            }
         }
-        fontPane.setBounds(5,550,10,10);
-
-        */
 
         fileNew.addActionListener(this);
         fileOpen.addActionListener(this);
@@ -106,7 +151,14 @@ public class TextEditor extends Frame implements ActionListener
 
         fontAddSizeMenu.addActionListener(this);
         fontRemSizeMenu.addActionListener(this);
+
         fontMenuItem.addActionListener(this);
+
+        fontStylePlain.addActionListener(this);
+        fontStyleBold.addActionListener(this);
+        fontStyleItalic.addActionListener(this);
+
+        colorMenuItem.addActionListener(this);
 
         this.addWindowListener(new WindowAdapter() {
             @Override
@@ -120,12 +172,21 @@ public class TextEditor extends Frame implements ActionListener
     public void actionPerformed(ActionEvent e)
     {
         Frame frame = new Frame();
-
+        /*
         if (e.getActionCommand().equals(fontFamily))
         {
-            textArea.setFont(new Font(fontFamily ,Font.PLAIN, fontSize));
+            textArea.setFont(new Font(fontFamily, Font.PLAIN, fontSize));
         }
-
+        */
+        if (e.getActionCommand().equals("Plain")){
+            textArea.setFont(new Font(fontFamily, Font.PLAIN, fontSize));
+        }
+        if (e.getActionCommand().equals("Bold")){
+            textArea.setFont(new Font(fontFamily, Font.BOLD, fontSize));
+        }
+        if (e.getActionCommand().equals("Italic")){
+            textArea.setFont(new Font(fontFamily, Font.ITALIC, fontSize));
+        }
         if (e.getActionCommand().equals("+"))
         {
             int fontSizeTemp = (int) fontSize;
